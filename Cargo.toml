@@ -1,0 +1,8 @@
+[package]
+name = "cse262-project"
+version = "0.1.0"
+authors = ["Corey Montella <cim310@lehigh.edu>"]
+edition = "2018"
+
+[dependencies]
+nom = "5.0.1"
