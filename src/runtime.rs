@@ -75,6 +75,7 @@ impl Runtime {
           children
         };
         let mut new_frame = HashMap::new();
+        println!("THIS IS WHERE I SHOULD BE");
         let mut result: Result<Value, &'static str> = Err("Undefined function");
         let rt = self as *mut Runtime;
         match self.functions.get(name) {
@@ -167,6 +168,7 @@ impl Runtime {
         }
       }
       Node::Number{value} => {
+        println!("In number");
         Ok(Value::Number(*value))
       }
       Node::String{value} => {

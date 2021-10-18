@@ -45,8 +45,8 @@ pub fn number(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::Number{ value: number}))                 // Return the now partially consumed input with a number as well
 }
 
-pub fn boolean(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+/*pub fn boolean(input: &str) -> IResult<&str, Node> {
+  
 }
 
 pub fn string(input: &str) -> IResult<&str, Node> {
@@ -150,7 +150,7 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
 
 pub fn comment(input: &str) -> IResult<&str, Node> {
   unimplemented!();
-}
+}*/
 
 // Define a program. You will change this, this is just here for example.
 // You'll probably want to modify this by changing it to be that a program
