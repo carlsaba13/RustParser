@@ -27,6 +27,7 @@ impl Runtime {
     match node {
       Node::Program{children} => {
         for n in children {
+          println!("n = {:?}", n);
           match n {
             Node::FunctionDefine{..} => {
               self.run(n);

@@ -45,11 +45,14 @@ pub fn number(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::Number{ value: number}))                 // Return the now partially consumed input with a number as well
 }
 
-/*pub fn boolean(input: &str) -> IResult<&str, Node> {
-  
+pub fn boolean(input: &str) -> IResult<&str, Node> {
+  let (input, result) = alt((tag("true"), tag("false")))(input)?;
+  let boolv = result.parse::<bool>().unwrap();
+  println!("boolv = {:?}", boolv);
+  Ok((input, Node::Bool{ value: boolv}))
 }
 
-pub fn string(input: &str) -> IResult<&str, Node> {
+/*pub fn string(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
@@ -157,7 +160,7 @@ pub fn comment(input: &str) -> IResult<&str, Node> {
 // is defined as at least one function definition, but maybe more. Start
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((number, identifier))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
+  let (input, result) = alt((number, boolean, identifier,))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
   
   let realResult = Node::Expression{children: vec![result]};
   println!("realResult = {:?}", realResult);
