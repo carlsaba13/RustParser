@@ -27,28 +27,17 @@ impl Runtime {
     match node {
       Node::Program{children} => {
         for n in children {
-          println!("n = {:?}", n);
           match n {
             Node::FunctionDefine{..} => {
-              println!("Function define\n");
               self.run(n);
             },
             Node::Expression{..} => {
-              println!("Expression\n");
               self.functions.insert("main".to_string(), vec![Node::FunctionReturn{children: vec![n.clone()]}]);
             },
             Node::Statement{..} => {
-              println!("Statement\n");
               self.functions.insert("main".to_string(), vec![n.clone()]);
-            },
-            Node::Number{..} => {
-              println!("In number");
-              self.functions.insert("main".to_string(), vec![n.clone()]);
-            },
-            _ => {
-              println!("In default");
-              ();
-            },
+            }
+            _ => (),
           }
         }
         Ok(Value::Bool(true))
@@ -75,7 +64,6 @@ impl Runtime {
         }
       },
       Node::FunctionCall{name, children} => {
-        println!("(name, children) = {:?}", (name, children));
         let in_args = if children.len() > 0 {
           match &children[0] {
             Node::FunctionArguments{children} => {
@@ -84,18 +72,13 @@ impl Runtime {
             _ => children,
           }
         } else {
-          println!("IN else");
-          println!("children = {:?}", children);
           children
         };
         let mut new_frame = HashMap::new();
-        println!("THIS IS WHERE I SHOULD BE");
         let mut result: Result<Value, &'static str> = Err("Undefined function");
         let rt = self as *mut Runtime;
-        println!("name = {:?}", self.functions.get(name));
         match self.functions.get(name) {
           Some(statements) => {
-            println!("Statements = {:?}", statements);
             {
               match statements[0].clone() {
                 Node::FunctionArguments{children} => {
@@ -125,10 +108,7 @@ impl Runtime {
             }
             self.stack.pop();
           },
-          None => {
-            println!("None");
-            ()
-          },
+          None => (),
         };
         result
       },
@@ -187,7 +167,6 @@ impl Runtime {
         }
       }
       Node::Number{value} => {
-        println!("In number");
         Ok(Value::Number(*value))
       }
       Node::String{value} => {
@@ -206,8 +185,7 @@ impl Runtime {
 
 pub fn run(node: &Node) -> Result<Value, &'static str> {
   let mut runtime = Runtime::new();
-  println!("node = {:?}", node);
-  println!("RESULT = {:?}", runtime.run(&node));
+  runtime.run(node);
   let start_main = Node::FunctionCall{name: "main".to_string(), children: vec![]};
   runtime.run(&start_main)
 }

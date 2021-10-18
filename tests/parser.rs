@@ -23,7 +23,7 @@ macro_rules! test {
   )
 }
 
-test!(numeric, r#"123"#, Ok(Value::Number(123)));
+test!(numeric, r#"123"#, Ok(Value::Number(1234)));
 /*test!(identifier, r#"x"#, Err("Undefined variable"));
 test!(string, r#""hello world""#, Ok(Value::String("hello world".to_string())));
 test!(bool_true, r#"true"#, Ok(Value::Bool(true)));
