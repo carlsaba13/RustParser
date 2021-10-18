@@ -158,5 +158,8 @@ pub fn comment(input: &str) -> IResult<&str, Node> {
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
   let (input, result) = alt((number, identifier))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
-  Ok((input, Node::Program{ children: vec![result]}))       // Whether the result is an identifier or a number, we attach that to the program
+  
+  let realResult = Node::Expression{children: vec![result]};
+  println!("realResult = {:?}", realResult);
+  Ok((input, Node::Program{ children: vec![realResult]}))       // Whether the result is an identifier or a number, we attach that to the program
 }

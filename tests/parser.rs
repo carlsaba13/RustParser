@@ -11,7 +11,6 @@ macro_rules! test {
       match program($test) {
         Ok((input, p)) => {
           assert_eq!(input, "");
-          println!("input = {}", input);
           println!("p = {:?}", p);
           println!("run(p) = {:?}", run(&p));
           assert_eq!(run(&p), $expected);
@@ -23,7 +22,7 @@ macro_rules! test {
   )
 }
 
-test!(numeric, r#"123"#, Ok(Value::Number(1234)));
+test!(numeric, r#"123"#, Ok(Value::Number(123)));
 /*test!(identifier, r#"x"#, Err("Undefined variable"));
 test!(string, r#""hello world""#, Ok(Value::String("hello world".to_string())));
 test!(bool_true, r#"true"#, Ok(Value::Bool(true)));
