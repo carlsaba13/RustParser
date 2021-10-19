@@ -7,8 +7,8 @@ use nom::{
   branch::alt,
   combinator::opt,
   multi::{many1, many0},
-  bytes::complete::{tag},
-  character::complete::{alphanumeric1, digit1},
+  bytes::complete::{tag, take, take_until},
+  character::complete::{alphanumeric1, digit1, char},
 };
 
 // Here are the different node types. You will use these to make your parser and your grammar.
@@ -52,11 +52,14 @@ pub fn boolean(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::Bool{ value: boolv}))
 }
 
-/*pub fn string(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+pub fn string(input: &str) -> IResult<&str, Node> {
+  let (input, result) = char('\"')(input)?; // eat the first quote
+  let (input, result) = take_until("\"")(input)?; // parse through everything except the quote
+  let (input, na) = char('\"')(input)?; // eat the last quote, na stores unecessary result
+  Ok((input, Node::String{ value: result.to_string()}))
 }
 
-pub fn function_call(input: &str) -> IResult<&str, Node> {
+/*pub fn function_call(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
@@ -160,8 +163,7 @@ pub fn comment(input: &str) -> IResult<&str, Node> {
 // is defined as at least one function definition, but maybe more. Start
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((number, boolean, identifier,))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
-  
+  let (input, result) = alt((number, boolean, identifier, string))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
   let realResult = Node::Expression{children: vec![result]};
   println!("realResult = {:?}", realResult);
   Ok((input, Node::Program{ children: vec![realResult]}))       // Whether the result is an identifier or a number, we attach that to the program

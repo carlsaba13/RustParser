@@ -23,8 +23,8 @@ macro_rules! test {
 }
 
 test!(numeric, r#"123"#, Ok(Value::Number(123)));
-//test!(identifier, r#"x"#, Err("Undefined variable"));
-//test!(string, r#""hello world""#, Ok(Value::String("hello world".to_string())));
+test!(identifier, r#"x"#, Err("Undefined variable"));
+test!(string, r#""hello world""#, Ok(Value::String("hello world".to_string())));
 test!(bool_true, r#"true"#, Ok(Value::Bool(true)));
 test!(bool_false, r#"false"#, Ok(Value::Bool(false)));
 /*test!(function_call, r#"foo()"#, Err("Undefined function"));
