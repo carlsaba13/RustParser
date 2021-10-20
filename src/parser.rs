@@ -68,10 +68,21 @@ pub fn function_call(input: &str) -> IResult<&str, Node> {
   let (input, result) = char('(')(input)?;
   let (input, args) = take_until(")")(input)?;
   let s = args.split(",");
+  let mut child: Vec<Node> = vec![];
   let ch: Vec<&str> = s.collect();
+  println!("ch.len = {:?}", ch.len());
+  println!("ch = {:?}", ch);
+  if ch.len() > 1 {
+    for c in ch.iter() {
+      let (i, n) = identifier(c)?;
+      assert_eq!(i, "");
+      child.push(n);
+    }
+  }
+  
   
   let (input, result) = char(')')(input)?;
-  Ok((input, Node::FunctionCall{ name: fn_name, children: vec![]}))
+  Ok((input, Node::FunctionCall{ name: fn_name, children: child}))
 }
 
 // Math expressions with parens (1 * (2 + 3))
