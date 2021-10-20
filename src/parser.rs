@@ -9,6 +9,7 @@ use nom::{
   multi::{many1, many0},
   bytes::complete::{tag, take, take_until},
   character::complete::{alphanumeric1, digit1, char},
+  sequence::separated_pair,
 };
 
 // Here are the different node types. You will use these to make your parser and your grammar.
@@ -34,6 +35,7 @@ pub enum Node {
 
 // Define production rules for an identifier
 pub fn identifier(input: &str) -> IResult<&str, Node> {
+  println!("In identifier");
   let (input, result) = alphanumeric1(input)?;              // Consume at least 1 alphanumeric character. The ? automatically unwraps the result if it's okay and bails if it is an error.
   Ok((input, Node::Identifier{ value: result.to_string()})) // Return the now partially consumed input, as well as a node with the string on it.
 }
@@ -59,12 +61,21 @@ pub fn string(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::String{ value: result.to_string()}))
 }
 
-/*pub fn function_call(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+pub fn function_call(input: &str) -> IResult<&str, Node> {
+  let (input, result) = identifier(input)?;
+  let fn_name = String::from(input.clone());
+  println!("Input = {:?}", input);
+  let (input, result) = char('(')(input)?;
+  let (input, args) = take_until(")")(input)?;
+  let s = args.split(",");
+  let ch: Vec<&str> = s.collect();
+  
+  let (input, result) = char(')')(input)?;
+  Ok((input, Node::FunctionCall{ name: fn_name, children: vec![]}))
 }
 
 // Math expressions with parens (1 * (2 + 3))
-pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
+/*pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
@@ -163,8 +174,8 @@ pub fn comment(input: &str) -> IResult<&str, Node> {
 // is defined as at least one function definition, but maybe more. Start
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((number, boolean, identifier, string))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
+  let (input, result) = alt((function_call, number, boolean, identifier, string))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
   let realResult = Node::Expression{children: vec![result]};
-  println!("realResult = {:?}", realResult);
+  //println!("realResult = {:?}", realResult);
   Ok((input, Node::Program{ children: vec![realResult]}))       // Whether the result is an identifier or a number, we attach that to the program
 }
