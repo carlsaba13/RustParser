@@ -6,12 +6,11 @@ use nom::{
   IResult,
   branch::alt,
   combinator::opt,
-  multi::{many1, many0},
-  bytes::complete::{tag, take, take_until},
+  multi::{many1, many0, many_till, separated_list},
+  bytes::complete::{tag, take, take_until, take_till},
   character::complete::{alphanumeric1, digit1, char},
   sequence::separated_pair,
 };
-
 // Here are the different node types. You will use these to make your parser and your grammar.
 // You may add other nodes as you see fit, but these are expected by the runtime.
 
@@ -50,7 +49,6 @@ pub fn number(input: &str) -> IResult<&str, Node> {
 pub fn boolean(input: &str) -> IResult<&str, Node> {
   let (input, result) = alt((tag("true"), tag("false")))(input)?;
   let boolv = result.parse::<bool>().unwrap();
-  println!("boolv = {:?}", boolv);
   Ok((input, Node::Bool{ value: boolv}))
 }
 
@@ -64,29 +62,54 @@ pub fn string(input: &str) -> IResult<&str, Node> {
 pub fn function_call(input: &str) -> IResult<&str, Node> {
   let (input, result) = identifier(input)?;
   let fn_name = String::from(input.clone());
-  println!("Input = {:?}", input);
   let (input, result) = char('(')(input)?;
+  if input.contains(",") {
+    let (input, args) = other_arg(input)?;
+    println!("ARGUMENTS = {:?}", args);
+    println!("INput = {:?}", input);
+    let (input, result) = char(')')(input)?;
+    Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
+  } else {
+    let (input, args) = arguments(input)?;
+    println!("ARGUMENTS = {:?}", args);
+    println!("INput = {:?}", input);
+    let (input, result) = char(')')(input)?;
+    Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
+  }
+}
+
+pub fn arguments(input: &str) -> IResult<&str, Node> {
+  println!("In arguments");
+  println!("ArgInput = {:?}", input);
+  if input == ")" { // no arguments
+    Ok((input, Node::Expression{children: vec![]}))
+  } else {
+    println!("In else");
+    let (input, result) = identifier(input)?;
+    println!("After identifier, input = {:?}, result = {:?}", input, result);
+    Ok((input, result))
+  }
+  //let number = result.parse::<i32>().unwrap();
+}
+
+// Like the first argument but with a comma in front
+pub fn other_arg(input: &str) -> IResult<&str, Node> {
+  println!("In other_arg");
   let (input, args) = take_until(")")(input)?;
-  let s = args.split(",");
-  let mut child: Vec<Node> = vec![];
-  let ch: Vec<&str> = s.collect();
-  println!("ch.len = {:?}", ch.len());
-  println!("ch = {:?}", ch);
-  if ch.len() > 1 {
-    for c in ch.iter() {
-      let (i, n) = identifier(c)?;
-      assert_eq!(i, "");
-      child.push(n);
-    }
+  println!("Other arg input = {:?}, arg = {:?}", input, args.to_string());
+  let split = args.split(",");
+  let mut ch: Vec<Node> = vec![];
+  for a in split {
+    println!("a = {:?}", a);
+    let (i, r) = identifier(a)?;
+    ch.push(r);
   }
   
-  
-  let (input, result) = char(')')(input)?;
-  Ok((input, Node::FunctionCall{ name: fn_name, children: child}))
+  Ok((input, Node::Expression{children: ch}))
 }
 
 // Math expressions with parens (1 * (2 + 3))
-/*pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
+pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
@@ -152,8 +175,8 @@ pub fn function_return(input: &str) -> IResult<&str, Node> {
 }
 
 // Define a statement of the form
-// let x = expression
-pub fn variable_define(input: &str) -> IResult<&str, Node> {
+// let x = expression*/
+/*pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("let ")(input)?;
   let (input, variable) = identifier(input)?;
   let (input, _) = many0(tag(" "))(input)?;
@@ -162,16 +185,6 @@ pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, expression) = expression(input)?;
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
-
-pub fn arguments(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
-}
-
-// Like the first argument but with a comma in front
-pub fn other_arg(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
-}
-
 pub fn function_definition(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
