@@ -60,34 +60,32 @@ pub fn string(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn function_call(input: &str) -> IResult<&str, Node> {
+  println!("in function call");
+  println!("InputFC = {:?}", input);
   let (input, result) = identifier(input)?;
   let fn_name = String::from(input.clone());
   let (input, result) = char('(')(input)?;
-  if input.contains(",") {
-    let (input, args) = other_arg(input)?;
-    println!("ARGUMENTS = {:?}", args);
-    println!("INput = {:?}", input);
-    let (input, result) = char(')')(input)?;
-    Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
-  } else {
-    let (input, args) = arguments(input)?;
-    println!("ARGUMENTS = {:?}", args);
-    println!("INput = {:?}", input);
-    let (input, result) = char(')')(input)?;
-    Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
-  }
+  let (input, args) = alt((other_arg, arguments))(input)?;
+  println!("ARGUMENTS = {:?}", args);
+  println!("INput = {:?}", input);
+  let (input, result) = char(')')(input)?;
+  Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
 }
 
 pub fn arguments(input: &str) -> IResult<&str, Node> {
   println!("In arguments");
   println!("ArgInput = {:?}", input);
-  if input == ")" { // no arguments
-    Ok((input, Node::Expression{children: vec![]}))
+  //println!("slice[0] = {:?}", input.bytes().next());
+  let i = input.bytes().next().unwrap();
+  println!("Slice = {:?}", i);
+  if i == (')' as u8) { // no arguments
+    Ok((input, Node::FunctionArguments{children: vec![]}))
   } else {
     println!("In else");
     let (input, result) = identifier(input)?;
     println!("After identifier, input = {:?}, result = {:?}", input, result);
-    Ok((input, result))
+    let fun_arg = Node::FunctionArguments{children: vec![result]};
+    Ok((input, fun_arg))
   }
   //let number = result.parse::<i32>().unwrap();
 }
@@ -105,7 +103,7 @@ pub fn other_arg(input: &str) -> IResult<&str, Node> {
     ch.push(r);
   }
   
-  Ok((input, Node::Expression{children: ch}))
+  Ok((input, Node::FunctionArguments{children: ch}))
 }
 
 // Math expressions with parens ((10+2)*6)/4
@@ -207,23 +205,26 @@ pub fn math_expression(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn expression(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((string, boolean, math_expression, function_call, number, identifier))(input)?;
+  let (input, result) = alt((string, boolean, function_call, math_expression, number, identifier))(input)?;
   let realResult = Node::Expression{children: vec![result]};
   Ok((input, realResult))
 }
 
 pub fn statement(input: &str) -> IResult<&str, Node> {
+  println!("In statement");
   let (input, result) = variable_define(input)?;
   Ok((input, Node::Statement{children: vec![result]}))
 }
 
-/*pub fn function_return(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+pub fn function_return(input: &str) -> IResult<&str, Node> {
+  let (input, result) = tag("return ")(input)?;
+  Ok((input, Node::Bool{value: true}))
 }
 
 // Define a statement of the form
 // let x = expression*/
 pub fn variable_define(input: &str) -> IResult<&str, Node> {
+  println!("In variable define");
   let (input, _) = tag("let ")(input)?;
   let (input, variable) = identifier(input)?;
   let (input, _) = many0(tag(" "))(input)?;
@@ -233,20 +234,33 @@ pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag(";")(input)?;
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
-/*pub fn function_definition(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+pub fn function_definition(input: &str) -> IResult<&str, Node> {
+  let (input, _) = tag("fn ")(input)?;
+  let (input, fn_name) = take_until("(")(input)?;
+  println!("fn_name = {:?}", fn_name);
+  let (input, _) = tag("(")(input)?;
+  println!("InputBeforeAlt = {:?}", input);
+  let (input, args) = alt((other_arg, arguments))(input)?;
+  let (input, _) = tag(")")(input)?;
+  println!("InputAfterAlt = {:?}", input);
+  println!("args = {:?}", args);
+  let (input, _) = tag("{")(input)?;
+  let (input, _) = tag("}")(input)?;
+  Ok((input, Node::Expression{children: vec![]}))
+
+
 }
 
 pub fn comment(input: &str) -> IResult<&str, Node> {
   unimplemented!();
-}*/
+}
 
 // Define a program. You will change this, this is just here for example.
 // You'll probably want to modify this by changing it to be that a program
 // is defined as at least one function definition, but maybe more. Start
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
-    let (input, result) = alt((statement, expression))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
-    Ok((input, Node::Program{ children: vec![result]}))       // Whether the result is an identifier or a number, we attach that to the program
+    let (input, result) = many0(alt((function_definition, statement, expression)))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
+    Ok((input, Node::Program{ children: result}))       // Whether the result is an identifier or a number, we attach that to the program
   
 }

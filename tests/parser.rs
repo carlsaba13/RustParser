@@ -43,11 +43,11 @@ test!(math_divide, r#"6 / 2"#, Ok(Value::Number(3)));
 test!(math_exponent, r#"2 ^ 4"#, Ok(Value::Number(16)));
 test!(math_more_terms, r#"10 + 2*6"#, Ok(Value::Number(22)));
 test!(math_more_terms_paren, r#"((10+2)*6)/4"#, Ok(Value::Number(18)));
-/*test!(assign_math, r#"let x = 1 + 1;"#, Ok(Value::Number(2)));
+test!(assign_math, r#"let x = 1 + 1;"#, Ok(Value::Number(2)));
 test!(assign_function, r#"let x = foo();"#, Err("Undefined function"));
 test!(assign_function_arguments, r#"let x = foo(a,b,c);"#, Err("Undefined function"));
 test!(define_function, r#"fn main(){return foo();} fn foo(){return 5;}"#, Ok(Value::Number(5)));
-test!(define_function_args, r#"fn main(){return foo(1,2,3);} fn foo(a,b,c){return a+b+c;}"#, Ok(Value::Number(6)));
+/*test!(define_function_args, r#"fn main(){return foo(1,2,3);} fn foo(a,b,c){return a+b+c;}"#, Ok(Value::Number(6)));
 test!(define_function_more_statement, r#"fn main() {
   return foo();
 }
