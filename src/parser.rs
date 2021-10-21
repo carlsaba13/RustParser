@@ -245,6 +245,8 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   println!("InputAfterAlt = {:?}", input);
   println!("args = {:?}", args);
   let (input, _) = tag("{")(input)?;
+  let (input, statements) = many0(statement)(input)?;
+  let (input, fn_return) = function_return(input)?;
   let (input, _) = tag("}")(input)?;
   Ok((input, Node::Expression{children: vec![]}))
 
