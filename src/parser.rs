@@ -34,7 +34,7 @@ pub enum Node {
 
 // Define production rules for an identifier
 pub fn identifier(input: &str) -> IResult<&str, Node> {
-  println!("In identifier");
+  //println!("In identifier");
   let (input, result) = alphanumeric1(input)?;              // Consume at least 1 alphanumeric character. The ? automatically unwraps the result if it's okay and bails if it is an error.
   Ok((input, Node::Identifier{ value: result.to_string()})) // Return the now partially consumed input, as well as a node with the string on it.
 }
@@ -108,9 +108,19 @@ pub fn other_arg(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::Expression{children: ch}))
 }
 
-// Math expressions with parens (1 * (2 + 3))
+// Math expressions with parens ((10+2)*6)/4
 pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let mut ch: Vec<Node> = vec![];
+  println!("PARENTHESIS");
+  let (input, result) = tag("(")(input)?;
+  let (input, args) = math_expression(input)?;
+  println!("ARGS = {:?}", args);
+  ch.push(args);
+  println!();
+  println!("ch = {:?}", ch);
+  println!();
+  let (input, result) = tag(")")(input)?;
+  Ok((input, Node::Expression{children: ch}))
 }
 
 pub fn l4(input: &str) -> IResult<&str, Node> {
@@ -118,19 +128,51 @@ pub fn l4(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn l3_infix(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, op) = tag("^")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, args) = l3(input)?;
+  Ok((input, Node::MathExpression{name: op.to_string(), children: vec![args]}))
 }
 
 pub fn l3(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, mut head) = l4(input)?;
+  let (input, tail) = many0(l3_infix)(input)?;
+  for n in tail {
+    match n {
+      Node::MathExpression{name, mut children} => {
+        let mut new_children = vec![head.clone()];
+        new_children.append(&mut children);
+        head = Node::MathExpression{name, children: new_children};
+      }
+      _ => () 
+    };
+  }
+  Ok((input, head))
 }
 
 pub fn l2_infix(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, op) = alt((tag("*"),tag("/")))(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, args) = l3(input)?;
+  Ok((input, Node::MathExpression{name: op.to_string(), children: vec![args]}))
 }
 
 pub fn l2(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, mut head) = l3(input)?;
+  let (input, tail) = many0(l2_infix)(input)?;
+  for n in tail {
+    match n {
+      Node::MathExpression{name, mut children} => {
+        let mut new_children = vec![head.clone()];
+        new_children.append(&mut children);
+        head = Node::MathExpression{name, children: new_children};
+      }
+      _ => () 
+    };
+  }
+  Ok((input, head))
 }
 
 // L1 - L4 handle order of operations for math expressions 
@@ -143,6 +185,7 @@ pub fn l1_infix(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn l1(input: &str) -> IResult<&str, Node> {
+  println!("in L1, input = {:?}", input);
   let (input, mut head) = l2(input)?;
   let (input, tail) = many0(l1_infix)(input)?;
   for n in tail {
@@ -159,33 +202,38 @@ pub fn l1(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn math_expression(input: &str) -> IResult<&str, Node> {
+  println!("Doing math");
   l1(input)
 }
 
 pub fn expression(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, result) = alt((string, boolean, math_expression, function_call, number, identifier))(input)?;
+  let realResult = Node::Expression{children: vec![result]};
+  Ok((input, realResult))
 }
 
 pub fn statement(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, result) = variable_define(input)?;
+  Ok((input, Node::Statement{children: vec![result]}))
 }
 
-pub fn function_return(input: &str) -> IResult<&str, Node> {
+/*pub fn function_return(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
 // Define a statement of the form
 // let x = expression*/
-/*pub fn variable_define(input: &str) -> IResult<&str, Node> {
+pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("let ")(input)?;
   let (input, variable) = identifier(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("=")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, expression) = expression(input)?;
+  let (input, _) = tag(";")(input)?;
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
-pub fn function_definition(input: &str) -> IResult<&str, Node> {
+/*pub fn function_definition(input: &str) -> IResult<&str, Node> {
   unimplemented!();
 }
 
@@ -198,8 +246,7 @@ pub fn comment(input: &str) -> IResult<&str, Node> {
 // is defined as at least one function definition, but maybe more. Start
 // by looking up the many1() combinator and that should get you started.
 pub fn program(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((function_call, number, boolean, identifier, string))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
-  let realResult = Node::Expression{children: vec![result]};
-  //println!("realResult = {:?}", realResult);
-  Ok((input, Node::Program{ children: vec![realResult]}))       // Whether the result is an identifier or a number, we attach that to the program
+    let (input, result) = alt((statement, expression))(input)?;  // Now that we've defined a number and an identifier, we can compose them using more combinators. Here we use the "alt" combinator to propose a choice.
+    Ok((input, Node::Program{ children: vec![result]}))       // Whether the result is an identifier or a number, we attach that to the program
+  
 }
