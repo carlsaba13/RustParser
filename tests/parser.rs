@@ -47,7 +47,7 @@ test!(assign_math, r#"let x = 1 + 1;"#, Ok(Value::Number(2)));
 test!(assign_function, r#"let x = foo();"#, Err("Undefined function"));
 test!(assign_function_arguments, r#"let x = foo(a,b,c);"#, Err("Undefined function"));
 test!(define_function, r#"fn main(){return foo();} fn foo(){return 5;}"#, Ok(Value::Number(5)));
-/*test!(define_function_args, r#"fn main(){return foo(1,2,3);} fn foo(a,b,c){return a+b+c;}"#, Ok(Value::Number(6)));
+test!(define_function_args, r#"fn main(){return foo(1,2,3);} fn foo(a,b,c){return a+b+c;}"#, Ok(Value::Number(6)));
 test!(define_function_more_statement, r#"fn main() {
   return foo();
 }
@@ -55,7 +55,7 @@ fn foo(){
   let x = 5;
   return x;
 }"#, Ok(Value::Number(5)));
-test!(define_full_program, r#"fn foo(a,b,c) {
+/*test!(define_full_program, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
   return x * y;

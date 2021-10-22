@@ -62,13 +62,18 @@ pub fn string(input: &str) -> IResult<&str, Node> {
 pub fn function_call(input: &str) -> IResult<&str, Node> {
   println!("in function call");
   println!("InputFC = {:?}", input);
-  let (input, result) = identifier(input)?;
-  let fn_name = String::from(input.clone());
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, result) = take_until("(")(input)?;
+  let (i, r2) = identifier(result)?;
+
+  println!("RESULT IMPORTANTTTTTT = {:?}", result);
+  let fn_name = String::from(result.clone());
   let (input, result) = char('(')(input)?;
   let (input, args) = alt((other_arg, arguments))(input)?;
   println!("ARGUMENTS = {:?}", args);
   println!("INput = {:?}", input);
   let (input, result) = char(')')(input)?;
+
   Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
 }
 
@@ -99,9 +104,10 @@ pub fn other_arg(input: &str) -> IResult<&str, Node> {
   let mut ch: Vec<Node> = vec![];
   for a in split {
     println!("a = {:?}", a);
-    let (i, r) = identifier(a)?;
-    ch.push(r);
+    let (i, r) = alt((number, identifier))(a)?;
+    ch.push(Node::Expression{children: vec![r]});
   }
+  println!("FUNCTION ARGUMENT CHILDREN = {:?}", ch);
   
   Ok((input, Node::FunctionArguments{children: ch}))
 }
@@ -212,19 +218,37 @@ pub fn expression(input: &str) -> IResult<&str, Node> {
 
 pub fn statement(input: &str) -> IResult<&str, Node> {
   println!("In statement");
+  let (input, _) = many0(tag("\n"))(input)?;
+  println!("INPUT NUMBER 3 = {:?}", input);
   let (input, result) = variable_define(input)?;
+  
   Ok((input, Node::Statement{children: vec![result]}))
 }
 
 pub fn function_return(input: &str) -> IResult<&str, Node> {
+  println!("In function return");
+  println!("INPUT NUMBER 4 = {:?}", input);
+  let (input, _) = many0(tag("\n"))(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  println!("INPUT NUMBER 5 = {:?}", input);
   let (input, result) = tag("return ")(input)?;
-  Ok((input, Node::Bool{value: true}))
+  let (input, return_val) = take_until(";")(input)?;
+  println!("Return val = {:?}", return_val);
+
+  let (i, ident) = alt((number, function_call, expression, identifier))(return_val)?;
+  println!("IDENT = {:?}", ident);
+  let (input, _) = tag(";")(input)?;
+  println!("INPUT NUMBER 6 = {:?}", input);
+  let (input, _) = many0(tag("\n"))(input)?;
+  //Ok((input, Node::FunctionArguments{children: vec![ident]}))
+  Ok((input, Node::FunctionReturn{children: vec![ident]}))
 }
 
 // Define a statement of the form
 // let x = expression*/
 pub fn variable_define(input: &str) -> IResult<&str, Node> {
   println!("In variable define");
+  let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("let ")(input)?;
   let (input, variable) = identifier(input)?;
   let (input, _) = many0(tag(" "))(input)?;
@@ -235,20 +259,28 @@ pub fn variable_define(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
 pub fn function_definition(input: &str) -> IResult<&str, Node> {
+  println!("Starting in fn_define");
+  let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("fn ")(input)?;
   let (input, fn_name) = take_until("(")(input)?;
-  println!("fn_name = {:?}", fn_name);
+  let (_, func_name) = identifier(fn_name)?;
+  println!("fn_name = {:?}", func_name);
   let (input, _) = tag("(")(input)?;
-  println!("InputBeforeAlt = {:?}", input);
   let (input, args) = alt((other_arg, arguments))(input)?;
-  let (input, _) = tag(")")(input)?;
-  println!("InputAfterAlt = {:?}", input);
   println!("args = {:?}", args);
+  println!("INPUT NUMBER 1 = {:?}", input);
+  let (input, _) = tag(")")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
-  let (input, statements) = many0(statement)(input)?;
+  println!("INPUT NUMBER 2 = {:?}", input);
+  let (input, stats) = many0(statement)(input)?;
+  println!("Statements = {:?}", stats);
   let (input, fn_return) = function_return(input)?;
+  println!("INPUT NUMBER 7 = {:?}", input);
   let (input, _) = tag("}")(input)?;
-  Ok((input, Node::Expression{children: vec![]}))
+  let (input, _) = many0(tag("\n"))(input)?;
+  println!("Returning from func_def, input = {:?}", input);
+  Ok((input, Node::FunctionDefine{children: vec![func_name, args, fn_return]}))
 
 
 }

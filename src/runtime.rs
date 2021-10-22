@@ -65,9 +65,12 @@ impl Runtime {
         }
       },
       Node::FunctionCall{name, children} => {
+        println!("FUNCTION CALL name = {:?}, children = {:?}", name, children);
+        //println!("FUNCTION CALL children0 = {:?}", &children[0].clone());
         let in_args = if children.len() > 0 {
           match &children[0] {
             Node::FunctionArguments{children} => {
+              println!("HEEERRREEE : {:?}", children);
               children
             },
             _ => children,
@@ -80,16 +83,24 @@ impl Runtime {
         let rt = self as *mut Runtime;
         match self.functions.get(name) {
           Some(statements) => {
+            println!("IMPORTANT STATEMENTS = {:?}", statements);
+            println!("statements[0].clone() = {:?}", statements[0].clone());
             {
-              match statements[0].clone() {
+              match statements[0].clone() { 
                 Node::FunctionArguments{children} => {
+                  
                   for (ix, arg) in children.iter().enumerate() {
+                    println!("ix = {:?} arg = {:?}", ix, arg);
                     unsafe {
+                      println!("BEFORE RESULT");
                       let result = (*rt).run(&in_args[ix])?;
+                      println!("RESULT = {:?}", result);
                       match arg {
                         Node::Expression{children} => {
+                          println!("In expression children: {:?}", children);
                           match &children[0] {
                             Node::Identifier{value} => {
+                              println!("In identifier value: {:?}", value);
                               new_frame.insert(value.clone(),result);
                             },
                             _ => (),
@@ -103,6 +114,7 @@ impl Runtime {
                 _ => (),
               }     
             }  
+            println!("new frame = {:?}", new_frame);
             self.stack.push(new_frame);
             for n in statements.clone() {
               result = self.run(&n);
@@ -127,6 +139,7 @@ impl Runtime {
         self.run(&children[0])
       },
       Node::Identifier{value} => {
+        println!("IDENTIFIER");
         let last = self.stack.len() - 1;
         match self.stack[last].get(value) {
           Some(id_value) => Ok(id_value.clone()),
