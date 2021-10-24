@@ -227,18 +227,17 @@ pub fn statement(input: &str) -> IResult<&str, Node> {
 
 pub fn function_return(input: &str) -> IResult<&str, Node> {
   println!("In function return");
-  println!("INPUT NUMBER 4 = {:?}", input);
   let (input, _) = many0(tag("\n"))(input)?;
   let (input, _) = many0(tag(" "))(input)?;
-  println!("INPUT NUMBER 5 = {:?}", input);
+  println!("INPUT IN FN RETURN = {:?}", input);
   let (input, result) = tag("return ")(input)?;
   let (input, return_val) = take_until(";")(input)?;
-  println!("Return val = {:?}", return_val);
 
   let (i, ident) = alt((number, function_call, expression, identifier))(return_val)?;
   println!("IDENT = {:?}", ident);
   let (input, _) = tag(";")(input)?;
   println!("INPUT NUMBER 6 = {:?}", input);
+  let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = many0(tag("\n"))(input)?;
   //Ok((input, Node::FunctionArguments{children: vec![ident]}))
   Ok((input, Node::FunctionReturn{children: vec![ident]}))
@@ -251,10 +250,13 @@ pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("let ")(input)?;
   let (input, variable) = identifier(input)?;
+  println!("VARIABLE NAME = {:?}", variable);
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("=")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
-  let (input, expression) = expression(input)?;
+  let (input, expr) = take_until(";")(input)?;
+  let (i, expression) = expression(expr)?;
+  println!("VARIABLE DEFINE EXPRESSION = {:?}", expression);
   let (input, _) = tag(";")(input)?;
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
@@ -264,7 +266,6 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("fn ")(input)?;
   let (input, fn_name) = take_until("(")(input)?;
   let (_, func_name) = identifier(fn_name)?;
-  println!("fn_name = {:?}", func_name);
   let (input, _) = tag("(")(input)?;
   let (input, args) = alt((other_arg, arguments))(input)?;
   println!("args = {:?}", args);
@@ -272,15 +273,37 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag(")")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
-  println!("INPUT NUMBER 2 = {:?}", input);
-  let (input, stats) = many0(statement)(input)?;
+  let (input, mut stats) = many0(statement)(input)?;
   println!("Statements = {:?}", stats);
+  for i in 0..stats.len() {
+    println!("stats[i] = {:?}", stats);
+  }
   let (input, fn_return) = function_return(input)?;
-  println!("INPUT NUMBER 7 = {:?}", input);
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(tag("\n"))(input)?;
-  println!("Returning from func_def, input = {:?}", input);
-  Ok((input, Node::FunctionDefine{children: vec![func_name, args, fn_return]}))
+  let mut v_def = vec![];
+  for i in 0..stats.len() {
+    match stats[i].clone() {
+      Node::Statement{children} => {
+        println!("child = {:?}", children);
+        for j in 0..children.len() {
+          println!("Sub child = {:?}", children[j].clone());
+          v_def.push(children[j].clone());
+        }
+      }
+      _ => {
+        println!("Nothing found here");
+      }
+    }
+  }
+
+
+  //stats.push(fn_return);\
+
+  v_def.push(fn_return.clone());
+  
+  //println!("Returning from func_def, input = {:?}", input);
+  Ok((input, Node::FunctionDefine{children: vec![func_name, args, Node::Statement{children: v_def}]}))
 
 
 }

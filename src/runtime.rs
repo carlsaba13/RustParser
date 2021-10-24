@@ -147,6 +147,7 @@ impl Runtime {
         }
       },
       Node::Statement{children} => {
+        println!("THIS IS THE MOST IMPORTANT = {:?}", children[0]);
         match children[0] {
           Node::VariableDefine{..} |
           Node::FunctionReturn{..} => {
@@ -163,6 +164,8 @@ impl Runtime {
         };
         // Expression result
         let value = self.run(&children[1])?;
+        println!("VERY IMPORTANT NAME = {:?}", name);
+        println!("VERY IMPORTANT VALUE = {:?}", value);
         let last = self.stack.len() - 1;
         self.stack[last].insert(name, value.clone());
         Ok(value)
