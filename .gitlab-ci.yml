@@ -2,7 +2,7 @@ image: "rust:latest"
 
 test:cargo:
   script:
-  - rustup 1.55.0
+  - rustup default 1.55.0
   - rustup show
   - rustc --version && cargo --version
   - rustup component add rust-src
