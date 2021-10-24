@@ -87,7 +87,7 @@ pub fn arguments(input: &str) -> IResult<&str, Node> {
     Ok((input, Node::FunctionArguments{children: vec![]}))
   } else {
     println!("In else");
-    let (input, result) = identifier(input)?;
+    let (input, result) = alt((identifier, math_expression))(input)?;
     println!("After identifier, input = {:?}, result = {:?}", input, result);
     let fun_arg = Node::FunctionArguments{children: vec![result]};
     Ok((input, fun_arg))
@@ -104,7 +104,7 @@ pub fn other_arg(input: &str) -> IResult<&str, Node> {
   let mut ch: Vec<Node> = vec![];
   for a in split {
     println!("a = {:?}", a);
-    let (i, r) = alt((number, identifier))(a)?;
+    let (i, r) = alt((math_expression, number, identifier))(a)?;
     ch.push(Node::Expression{children: vec![r]});
   }
   println!("FUNCTION ARGUMENT CHILDREN = {:?}", ch);
@@ -221,6 +221,7 @@ pub fn statement(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag("\n"))(input)?;
   println!("INPUT NUMBER 3 = {:?}", input);
   let (input, result) = variable_define(input)?;
+  let (input, _) = tag(";")(input)?;
   
   Ok((input, Node::Statement{children: vec![result]}))
 }
@@ -257,7 +258,6 @@ pub fn variable_define(input: &str) -> IResult<&str, Node> {
   let (input, expr) = take_until(";")(input)?;
   let (i, expression) = expression(expr)?;
   println!("VARIABLE DEFINE EXPRESSION = {:?}", expression);
-  let (input, _) = tag(";")(input)?;
   Ok((input, Node::VariableDefine{ children: vec![variable, expression]}))   
 }
 pub fn function_definition(input: &str) -> IResult<&str, Node> {
@@ -300,10 +300,17 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
 
   //stats.push(fn_return);\
 
-  v_def.push(fn_return.clone());
+  v_def.reverse();
+  //v_def.push(fn_return.clone());
+  let func_stats = Node::FunctionStatements{children: v_def.clone()};
   
   //println!("Returning from func_def, input = {:?}", input);
-  Ok((input, Node::FunctionDefine{children: vec![func_name, args, Node::Statement{children: v_def}]}))
+  let mut return_vec = vec![func_name, args];
+  for i in 0..v_def.len() {
+    return_vec.push(Node::Statement{children: vec![v_def[i].clone()]});
+  }
+  return_vec.push(fn_return);
+  Ok((input, Node::FunctionDefine{children: return_vec}))
 
 
 }

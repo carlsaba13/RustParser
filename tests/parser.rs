@@ -54,7 +54,7 @@ test!(define_function_more_statement, r#"fn main() {
 fn foo(){
   let x = 5;
   return x;
-}"#, Ok(Value::Number(5)));
+}"#, Ok(Value::Number(5))); // x = 2
 test!(define_full_program, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
