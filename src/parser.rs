@@ -34,7 +34,6 @@ pub enum Node {
 
 // Define production rules for an identifier
 pub fn identifier(input: &str) -> IResult<&str, Node> {
-  //println!("In identifier");
   let (input, result) = alphanumeric1(input)?;              // Consume at least 1 alphanumeric character. The ? automatically unwraps the result if it's okay and bails if it is an error.
   Ok((input, Node::Identifier{ value: result.to_string()})) // Return the now partially consumed input, as well as a node with the string on it.
 }
@@ -60,46 +59,31 @@ pub fn string(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn function_call(input: &str) -> IResult<&str, Node> {
-  println!("in function call");
-  println!("InputFC = {:?}", input);
   let (input, _) = many0(tag(" "))(input)?;
   let (input, result) = take_until("(")(input)?;
   let (i, r2) = identifier(result)?;
-
-  println!("RESULT IMPORTANTTTTTT = {:?}", result);
   let fn_name = String::from(result.clone());
   let (input, result) = char('(')(input)?;
   let (input, args) = alt((other_arg, arguments))(input)?;
-  println!("ARGUMENTS = {:?}", args);
-  println!("INput = {:?}", input);
   let (input, result) = char(')')(input)?;
-
   Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
 }
 
 pub fn arguments(input: &str) -> IResult<&str, Node> {
-  println!("In arguments");
-  println!("ArgInput = {:?}", input);
   //println!("slice[0] = {:?}", input.bytes().next());
   let i = input.bytes().next().unwrap();
-  println!("Slice = {:?}", i);
   if i == (')' as u8) { // no arguments
     Ok((input, Node::FunctionArguments{children: vec![]}))
   } else {
-    println!("In else");
     let (input, result) = alt((identifier, math_expression))(input)?;
-    println!("After identifier, input = {:?}, result = {:?}", input, result);
     let fun_arg = Node::FunctionArguments{children: vec![result]};
     Ok((input, fun_arg))
   }
-  //let number = result.parse::<i32>().unwrap();
 }
 
 // Like the first argument but with a comma in front
 pub fn other_arg(input: &str) -> IResult<&str, Node> {
-  println!("In other_arg");
   let (input, args) = take_until(")")(input)?;
-  println!("Other arg input = {:?}, arg = {:?}", input, args.to_string());
   let split = args.split(",");
   let mut ch: Vec<Node> = vec![];
   for a in split {
@@ -251,7 +235,6 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag(")")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
-  println!("INPUT BEFORE STATEMENT = {:?}", input);
   let (input, mut stats) = many0(alt((comment, statement)))(input)?;
   let (input, fn_return) = function_return(input)?;
   let (input, _) = tag("}")(input)?;
@@ -281,16 +264,11 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn comment(input: &str) -> IResult<&str, Node> {
-  println!("INPUT INTO COMMENT = {:?}", input);
   let (input, _) = many0(tag("\n"))(input)?;
-  println!("INPUT COMMENT 0.2 = {:?}", input);
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("//")(input)?;
-  println!("INPUT COMMENT 1 = {:?}", input);
   let (input, _) = take_until("\n")(input)?;
-  println!("INPUT COMMENT 2 = {:?}", input);
   let (input, _) = tag("\n")(input)?;
-  println!("INPUT AFTER COMMENT = {:?}", input);
   Ok((input, Node::Statement{children: vec![]})) // return empty statement for comment
 }
 

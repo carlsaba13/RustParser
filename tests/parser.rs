@@ -77,10 +77,14 @@ test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
 }
 
 fn bar(a) {
+  // hi there!
+  // I can do whatever I want here
   return a * 3;
 }
 
 fn main() {
+  // please give me a good grade
+  // I worked very hard
   return foo(1,2,3);  
 }"#, Ok(Value::Number(6)));
 
