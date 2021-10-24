@@ -2,14 +2,13 @@
 // https://docs.rs/nom/5.0.1/nom/
 // If you want to use it in your parser, you need to import it here. I've already imported a couple.
 
+#[allow(unused_imports)]
 use nom::{
   IResult,
   branch::alt,
-  combinator::opt,
-  multi::{many1, many0, many_till, separated_list},
-  bytes::complete::{tag, take, take_until, take_till},
+  multi::many0,
+  bytes::complete::{tag, take_until},
   character::complete::{alphanumeric1, digit1, char},
-  sequence::separated_pair,
 };
 // Here are the different node types. You will use these to make your parser and your grammar.
 // You may add other nodes as you see fit, but these are expected by the runtime.

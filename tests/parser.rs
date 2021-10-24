@@ -1,6 +1,7 @@
 extern crate cse262_project;
 extern crate nom;
 
+#[allow(unused_imports)]
 use cse262_project::{program, Node, Value, run};
 use nom::IResult;
 

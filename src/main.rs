@@ -1,6 +1,7 @@
 extern crate nom;
 extern crate cse262_project;
 
+#[allow(unused_imports)]
 use cse262_project::{program, run, Node};
 
 fn main() -> Result<(), nom::Err<(&'static str, nom::error::ErrorKind)>> {
