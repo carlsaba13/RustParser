@@ -4,6 +4,7 @@ extern crate nom;
 use cse262_project::{program, Node, Value, run};
 use nom::IResult;
 
+
 macro_rules! test {
   ($func:ident, $test:tt, $expected:expr) => (
     #[test]
@@ -54,10 +55,24 @@ test!(define_function_more_statement, r#"fn main() {
 fn foo(){
   let x = 5;
   return x;
-}"#, Ok(Value::Number(5))); // x = 2
+}"#, Ok(Value::Number(5)));
 test!(define_full_program, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
+  return x * y;
+}
+
+fn bar(a) {
+  return a * 3;
+}
+
+fn main() {
+  return foo(1,2,3);  
+}"#, Ok(Value::Number(6)));
+test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
+  let x = a + 1;
+  let y = bar(c - b);
+  // x = 5;
   return x * y;
 }
 
