@@ -180,7 +180,6 @@ pub fn l1(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn math_expression(input: &str) -> IResult<&str, Node> {
-  println!("Doing math");
   l1(input)
 }
 
