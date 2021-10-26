@@ -62,9 +62,9 @@ pub fn function_call(input: &str) -> IResult<&str, Node> {
   let (input, result) = take_until("(")(input)?;
   let (i, r2) = identifier(result)?;
   let fn_name = String::from(result.clone());
-  let (input, result) = char('(')(input)?;
+  let (input, result) = tag("(")(input)?;
   let (input, args) = alt((other_arg, arguments))(input)?;
-  let (input, result) = char(')')(input)?;
+  let (input, result) = tag(")")(input)?;
   Ok((input, Node::FunctionCall{ name: fn_name, children: vec![args]}))
 }
 
