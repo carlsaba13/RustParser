@@ -70,7 +70,9 @@ fn bar(a) {
 fn main() {
   return foo(1,2,3);  
 }"#, Ok(Value::Number(6)));
-test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
+test!(binary, r#"0b1111011"#, Ok(Value::Number(123)));
+test!(octal, r#"0o173"#, Ok(Value::Number(123)));
+/*test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
   // x = 5;
@@ -87,6 +89,6 @@ fn main() {
   // please give me a good grade
   // I worked very hard
   return foo(1,2,3);  
-}"#, Ok(Value::Number(6)));
+}"#, Ok(Value::Number(6)));*/
 
 

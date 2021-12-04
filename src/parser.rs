@@ -34,12 +34,32 @@ pub fn identifier(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::Identifier{ value: result.to_string()})) // Return the now partially consumed input, as well as a node with the string on it.
 }
 
+/*pub fn n(input: &str) -> IResult<&str, Node> {
+  let (input, result) = alt((tag("0"),tag("1"),tag("2"),tag("3"),tag("4"),tag("5"),tag("6"),tag("7"),tag("8"),tag("9")))(input)?;
+}*/
+
 pub fn binary(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, _) = tag("0")(input)?;
+  let (input, _) = tag("b")(input)?;
+  let (input, result) = many0(alt((tag("0"), tag("1"))))(input)?;
+  let mut s = String::from("");
+  for i in result {
+    s += i;
+  }
+  let intval = i32::from_str_radix(&s, 2).unwrap();
+  Ok((input, Node::Number{value: intval}))
 }
 
 pub fn octal(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  let (input, _) = tag("0")(input)?;
+  let (input, _) = tag("o")(input)?;
+  let (input, result) = many0(alt((tag("0"), tag("1"), tag("2"), tag("3"), tag("4"), tag("5"), tag("6"), tag("7"), tag("8"))))(input)?;
+  let mut s = String::from("");
+  for i in result {
+    s += i;
+  }
+  let intval = i32::from_str_radix(&s, 8).unwrap();
+  Ok((input, Node::Number{value: intval}))
 }
 
 pub fn decimal(input: &str) -> IResult<&str, Node> {
@@ -55,7 +75,25 @@ pub fn scientific(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn integer(input: &str) -> IResult<&str, Node> {
-  unimplemented!();
+  alt((integer0, integer1))(input)
+}
+
+pub fn integer0(input: &str) -> IResult<&str, Node> {
+  let (input, result) = tag("0")(input)?; 
+  let number = result.parse::<i32>().unwrap();
+  Ok((input, Node::Number{value: number}))
+}
+
+pub fn integer1(input: &str) -> IResult<&str, Node> {
+  let (input, r1) = alt((tag("1"),tag("2"),tag("3"),tag("4"),tag("5"),tag("6"),tag("7"),tag("8"),tag("9")))(input)?;
+  let (input, r2) = many0(digit1)(input)?;
+  let mut result = String::from(r1);
+  for i in r2 {
+    result += i;
+  }
+  let number = result.parse::<i32>().unwrap();
+  println!("{:?}", number);
+  Ok((input, Node::Number{value: number}))
 }
 
 pub fn floating_point(input: &str) -> IResult<&str, Node> {
@@ -64,9 +102,11 @@ pub fn floating_point(input: &str) -> IResult<&str, Node> {
 
 // Define an integer number
 pub fn number(input: &str) -> IResult<&str, Node> {
-  let (input, result) = digit1(input)?;                     // Consume at least 1 digit 0-9
+  alt((binary, octal, integer))(input)
+  //alt((binary, octal, decimal, hexidecimal, scientific, integer, floating_point))(input)
+  /*let (input, result) = digit1(input)?;                     // Consume at least 1 digit 0-9
   let number = result.parse::<i32>().unwrap();              // Parse the string result into a usize
-  Ok((input, Node::Number{ value: number}))                 // Return the now partially consumed input with a number as well
+  Ok((input, Node::Number{ value: number}))*/                 // Return the now partially consumed input with a number as well
 }
 pub fn boolean(input: &str) -> IResult<&str, Node> {
   let (input, result) = alt((tag("true"),tag("false")))(input)?;
