@@ -208,8 +208,40 @@ pub fn l1(input: &str) -> IResult<&str, Node> {
 pub fn math_expression(input: &str) -> IResult<&str, Node> {
   l1(input)
 }
+
+pub fn if_stmt(input: &str) -> IResult<&str, Node> {
+  let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
+  let (input, _) = tag("if")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag("(")(input)?;
+  let (input, result) = boolean(input)?;
+  let mut val = false;
+  match result {
+    Node::Bool{value} => {
+      val = value;
+    }
+    _ => {
+      val = false;
+    }
+  }
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag(")")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, _) = tag("{")(input)?;
+  let (input, stmts) = many1(statement)(input)?;
+  let (input, _) = tag("}")(input)?;
+  if val {
+    return Ok((input, Node::Statement{children: stmts}));
+  } else {
+    return Ok((input, Node::Statement{children: vec![]}))
+  }
+}
+
+
+
 pub fn expression(input: &str) -> IResult<&str, Node> {
-  let (input, result) = alt((boolean, math_expression, function_call, number, string, identifier))(input)?;
+  let (input, result) = alt((boolean, if_stmt, math_expression, function_call, number, string, identifier))(input)?;
   Ok((input, Node::Expression{ children: vec![result]}))   
 }
 pub fn statement(input: &str) -> IResult<&str, Node> {
