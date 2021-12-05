@@ -242,8 +242,28 @@ impl Runtime {
           }
         }
       }
-      Node::ConditionExpression {
-        
+      Node::ConditionExpression{name, children} => {
+        match (&children[0], &children[1]) {
+          (Node::Condition{conditions: lhs}, Node::Condition{conditions: rhs}) => {
+            match (self.run(&lhs[0]), self.run(&rhs[0])) {
+              (Ok(Value::Bool(left)), Ok(Value::Bool(right))) => {
+                  println!("s1 = {:?}", left);
+                  println!("s2 = {:?}", right);
+                  match name.as_ref() {
+                    "&" => Ok(Value::Bool(left & right)),
+                    "|" => Ok(Value::Bool(left | right)),
+                    _ => Err("Undefined operator")
+                  }
+              }
+              _ => {
+                Err("This should be two bools")
+              }
+            }
+          }
+          _ => Err("again an error")
+            
+        }
+          
       }
       _ => {
         Err("Unhandled Node")

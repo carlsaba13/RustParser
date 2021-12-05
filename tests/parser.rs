@@ -97,9 +97,9 @@ if true==true {
   1
 }"#, Ok(Value::Number(1)));
 test!(if_stmt_multiple_conditions_true, r#"
-if true & true {
+if 1+1==2 & 2+2==3 ||  {
   1
-}"#, Ok(Value::Number(1)));
+}"#, Ok(Value::Ignore()));
 test!(if_statement_complicated_math_true, r#"fn main() {
   if 1+(4/2)==3 {
     2

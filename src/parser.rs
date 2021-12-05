@@ -243,7 +243,6 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag(" "))(input)?;
   println!("Number 2 = {:?}", input);
   let (input, result) = alt((condition_expression, condition))(input)?;
-  let mut val = false;
   println!("RESULT = {:?}", result);
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
@@ -254,23 +253,25 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   println!("Done with parsing = {:?}", input);
+  let mut c = vec![];
+  match e {
+    Node::Expression{children} => {
+      c.append(&mut vec![children[0].clone()]);
+    }
+    Node::Statement{children} => {
+      c.append(&mut vec![children[0].clone()]);
+    }
+    _ => {
+      panic!("Why isn't this an expression or statement");
+    }
+  }
   match result {
     Node::Condition{conditions} => {
-      match e {
-        Node::Expression{children} => {
-          Ok((input, Node::If{condition: conditions, children: vec![children[0].clone()]}))
-        }
-        Node::Statement{children} => {
-          Ok((input, Node::If{condition: conditions, children: vec![children[0].clone()]}))
-        }
-        _ => {
-          panic!("What happened");
-        }
-      }
+        Ok((input, Node::If{condition: conditions, children: c}))
     }
     Node::ConditionExpression{name, children} => {
-      Ok((input, Node::ConditionExpression{name:name, children: children}))
-      
+      // create vector with all children later
+        Ok((input, Node::If{condition: vec![Node::ConditionExpression{name:name, children: children}], children: c}))
     }
     _ => {
       panic!("Should be some conditions");
