@@ -96,6 +96,10 @@ test!(if_stmt_bool_comparison_true, r#"
 if true==true {
   1
 }"#, Ok(Value::Number(1)));
+test!(if_stmt_multiple_conditions_true, r#"
+if true & true {
+  1
+}"#, Ok(Value::Number(1)));
 test!(if_statement_complicated_math_true, r#"fn main() {
   if 1+(4/2)==3 {
     2

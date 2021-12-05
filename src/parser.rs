@@ -28,6 +28,8 @@ pub enum Node {
   Identifier { value: String },
   String { value: String },
   If {condition: Vec<Node>, children: Vec<Node>},
+  Condition {conditions: Vec<Node>},
+  ConditionExpression{name: String, children: Vec<Node>},
   TestEquality {children: Vec<Node>}
 }
 // Define production rules for an identifier
@@ -220,13 +222,27 @@ pub fn equality_math(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::TestEquality{children: vec![side1,side2]}))
 }
 
+pub fn condition(input: &str) -> IResult<&str, Node> {
+  let (input, c) = alt((equality_math, boolean, function_call))(input)?;
+  Ok((input, Node::Condition{conditions: vec![c]}))
+}
+
+pub fn condition_expression(input: &str) -> IResult<&str, Node> {
+  let (input, c1) = condition(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, op) = alt((tag("&"), tag("|")))(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, c2) = condition(input)?;
+  Ok((input, Node::ConditionExpression{name: String::from(op), children: vec![c1,c2]}))
+}
+
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   println!("Number 1 = {:?}", input);
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   println!("Number 2 = {:?}", input);
-  let (input, result) = alt((equality_math, boolean, function_call))(input)?;
+  let (input, result) = alt((condition_expression, condition))(input)?;
   let mut val = false;
   println!("RESULT = {:?}", result);
   let (input, _) = many0(tag(" "))(input)?;
@@ -238,17 +254,29 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   println!("Done with parsing = {:?}", input);
-  match e {
-    Node::Expression{children} => {
-      Ok((input, Node::If{condition: vec![result], children: vec![children[0].clone()]}))
+  match result {
+    Node::Condition{conditions} => {
+      match e {
+        Node::Expression{children} => {
+          Ok((input, Node::If{condition: conditions, children: vec![children[0].clone()]}))
+        }
+        Node::Statement{children} => {
+          Ok((input, Node::If{condition: conditions, children: vec![children[0].clone()]}))
+        }
+        _ => {
+          panic!("What happened");
+        }
+      }
     }
-    Node::Statement{children} => {
-      Ok((input, Node::If{condition: vec![result], children: vec![children[0].clone()]}))
+    Node::ConditionExpression{name, children} => {
+      Ok((input, Node::ConditionExpression{name:name, children: children}))
+      
     }
     _ => {
-      panic!("What happened");
+      panic!("Should be some conditions");
     }
   }
+  
     
 }
 

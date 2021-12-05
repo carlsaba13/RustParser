@@ -197,6 +197,12 @@ impl Runtime {
         Ok(Value::Bool(*value))
       }
       Node::If{condition, children} => {
+        if condition.len() % 2 != 1 { // should be an odd amount of conditions
+          // Ex 'true | false' = 3 conditions
+          // Ex 'true' = 1 condition
+          // Ex 1+1==2 && true = 3 conditions
+          return Err("Invalid amount of conditions")
+        }
         let r = self.run(&condition[0])?;
         println!("r = {:?}", r);
         match r {
@@ -206,6 +212,9 @@ impl Runtime {
             } else {
               Ok(Value::Ignore())
             }
+          }
+          Value::Ignore() => {
+            Ok(Value::Ignore())
           }
           _ => {
             Err("Why isn't this a bool")
@@ -232,6 +241,9 @@ impl Runtime {
             return Err("Incompatible types")
           }
         }
+      }
+      Node::ConditionExpression {
+        
       }
       _ => {
         Err("Unhandled Node")
