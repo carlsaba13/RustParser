@@ -27,6 +27,7 @@ pub enum Node {
   Bool { value: bool },
   Identifier { value: String },
   String { value: String },
+  Ignore { value: bool},
 }
 // Define production rules for an identifier
 pub fn identifier(input: &str) -> IResult<&str, Node> {
@@ -210,31 +211,42 @@ pub fn math_expression(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
+  println!("Number 1 = {:?}", input);
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("(")(input)?;
-  let (input, result) = boolean(input)?;
+  println!("Number 2 = {:?}", input);
+  let (input, result) = alt((boolean, function_call))(input)?;
   let mut val = false;
   match result {
     Node::Bool{value} => {
       val = value;
     }
     _ => {
-      val = false;
+      val = true;
     }
   }
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag(")")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
-  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, _) = tag("{")(input)?;
-  let (input, stmts) = many1(statement)(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  println!("Whats up here = {:?}", input);
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, e) = expression(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, _) = tag("}")(input)?;
-  if val {
-    return Ok((input, Node::Statement{children: stmts}));
-  } else {
-    return Ok((input, Node::Statement{children: vec![]}))
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  println!("Done with parsing = {:?}", input);
+
+  match e {
+    Node::Expression{children} => {
+      return Ok((input, children[0].clone()));
+    }
+    _ => {
+      panic!("What happened");
+    }
   }
 }
 
@@ -244,8 +256,9 @@ pub fn expression(input: &str) -> IResult<&str, Node> {
   let (input, result) = alt((boolean, if_stmt, math_expression, function_call, number, string, identifier))(input)?;
   Ok((input, Node::Expression{ children: vec![result]}))   
 }
+
 pub fn statement(input: &str) -> IResult<&str, Node> {
-  let (input, _) = many0(alt((tag(" "),tag("\t"))))(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"), tag(" "))))(input)?;
   let (input, result) = alt((variable_define, function_return))(input)?;
   let (input, _) = tag(";")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
@@ -286,7 +299,7 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
   let (input, _) = many0(tag("\n"))(input)?;
-  let (input, mut statements) = many1(statement)(input)?;
+  let (input, mut statements) = many1(alt((statement, if_stmt)))(input)?;
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag("\n"),tag(" "))))(input)?;
   let mut children = vec![function_name];

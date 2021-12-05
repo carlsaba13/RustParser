@@ -72,6 +72,30 @@ fn main() {
 }"#, Ok(Value::Number(6)));
 test!(binary, r#"0b1111011"#, Ok(Value::Number(123)));
 test!(octal, r#"0o173"#, Ok(Value::Number(123)));
+test!(if_stmt_true, r#"
+if (true) {
+  1
+}"#, Ok(Value::Number(1)));
+test!(if_stmt_false, r#"
+if (false) {
+  1
+}"#, Ok(Value::Bool(false)));
+test!(define_function_if_statement_true, r#"fn main() {
+  if (foo()) {
+    2
+  }
+}
+fn foo(){
+  return true;
+}"#, Ok(Value::Number(2)));
+test!(define_function_if_statement_false, r#"fn main() {
+  if (foo()) {
+    2
+  }
+}
+fn foo(){
+  return false;
+}"#, Ok(Value::Bool(false)));
 /*test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);

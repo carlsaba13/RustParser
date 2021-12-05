@@ -24,6 +24,7 @@ impl Runtime {
   }
 
   pub fn run(&mut self, node: &Node) -> Result<Value, &'static str> {
+    println!("Node = {:?}", node);
     match node {
       Node::Program{children} => {
         for n in children {
@@ -155,7 +156,12 @@ impl Runtime {
         Ok(value)
       }
       Node::Expression{children} => {
+        println!("Runtime expression");
+        println!("{:?}", children[0]);
         match children[0] {
+          Node::Ignore{..} => {
+            Ok(Value::Bool(false))
+          }
           Node::MathExpression{..} |
           Node::Number{..} |
           Node::FunctionCall{..} |
