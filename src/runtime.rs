@@ -6,6 +6,7 @@ pub enum Value {
   String(String),
   Number(i32),
   Bool(bool),
+  Ignore()
 }
 
 
@@ -158,9 +159,22 @@ impl Runtime {
       Node::Expression{children} => {
         println!("Runtime expression");
         println!("{:?}", children[0]);
-        match children[0] {
-          Node::Ignore{..} => {
-            Ok(Value::Bool(false))
+        match &children[0] {
+          Node::If{condition, children} => {
+            let r = self.run(&condition[0])?;
+            println!("r = {:?}", r);
+            match r {
+              Value::Bool(val) => {
+                if val {
+                  self.run(&children[0])
+                } else {
+                  Ok(Value::Ignore())
+                }
+              }
+              _ => {
+                Err("Why isn't this a bool")
+              }
+            }
           }
           Node::MathExpression{..} |
           Node::Number{..} |
@@ -181,6 +195,43 @@ impl Runtime {
       }
       Node::Bool{value} => {
         Ok(Value::Bool(*value))
+      }
+      Node::If{condition, children} => {
+        let r = self.run(&condition[0])?;
+        println!("r = {:?}", r);
+        match r {
+          Value::Bool(val) => {
+            if val {
+              self.run(&children[0])
+            } else {
+              Ok(Value::Ignore())
+            }
+          }
+          _ => {
+            Err("Why isn't this a bool")
+          }
+        }
+      }
+      Node::TestEquality{children} => {
+        /*let s1 = self.run(&children[0])?;
+        let s2 = self.run(&children[1])?;
+        println!("Side 1 = {:?}", s1);
+        println!("Side 2 = {:?}", s2);*/
+        match (self.run(&children[0]), self.run(&children[1])) {
+          (Ok(Value::Number(lhs)), Ok(Value::Number(rhs))) => {
+            println!("Two numbers");
+            Ok(Value::Bool(lhs == rhs))
+          }
+          (Ok(Value::Bool(lhs)), Ok(Value::Bool(rhs))) => {
+            println!("Two bools");
+            Ok(Value::Bool(lhs == rhs))
+          }
+          _ => {
+            println!("lhs = {:?}", self.run(&children[0]));
+            println!("rhs = {:?}", self.run(&children[1]));
+            return Err("Incompatible types")
+          }
+        }
       }
       _ => {
         Err("Unhandled Node")

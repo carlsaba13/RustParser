@@ -27,7 +27,8 @@ pub enum Node {
   Bool { value: bool },
   Identifier { value: String },
   String { value: String },
-  Ignore { value: bool},
+  If {condition: Vec<Node>, children: Vec<Node>},
+  TestEquality {children: Vec<Node>}
 }
 // Define production rules for an identifier
 pub fn identifier(input: &str) -> IResult<&str, Node> {
@@ -210,44 +211,45 @@ pub fn math_expression(input: &str) -> IResult<&str, Node> {
   l1(input)
 }
 
+pub fn equality_math(input: &str) -> IResult<&str, Node> {
+  let (input, side1) = alt((boolean, math_expression))(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag("==")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, side2) = alt((boolean, math_expression))(input)?;
+  Ok((input, Node::TestEquality{children: vec![side1,side2]}))
+}
+
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   println!("Number 1 = {:?}", input);
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
-  let (input, _) = tag("(")(input)?;
   println!("Number 2 = {:?}", input);
-  let (input, result) = alt((boolean, function_call))(input)?;
+  let (input, result) = alt((equality_math, boolean, function_call))(input)?;
   let mut val = false;
-  match result {
-    Node::Bool{value} => {
-      val = value;
-    }
-    _ => {
-      val = true;
-    }
-  }
-  let (input, _) = many0(tag(" "))(input)?;
-  let (input, _) = tag(")")(input)?;
+  println!("RESULT = {:?}", result);
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, e) = alt((statement, expression))(input)?;
   println!("Whats up here = {:?}", input);
-  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
-  let (input, e) = expression(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   println!("Done with parsing = {:?}", input);
-
   match e {
     Node::Expression{children} => {
-      return Ok((input, children[0].clone()));
+      Ok((input, Node::If{condition: vec![result], children: vec![children[0].clone()]}))
+    }
+    Node::Statement{children} => {
+      Ok((input, Node::If{condition: vec![result], children: vec![children[0].clone()]}))
     }
     _ => {
       panic!("What happened");
     }
   }
+    
 }
 
 
