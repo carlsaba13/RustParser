@@ -74,31 +74,31 @@ test!(binary, r#"0b1111011"#, Ok(Value::Number(123)));
 test!(octal, r#"0o173"#, Ok(Value::Number(123)));
 test!(if_stmt_true, r#"
 if true {
-  1
+  let x = 1;
 }"#, Ok(Value::Number(1)));
 test!(if_stmt_false, r#"
 if false {
-  1
+  let x = 1;
 }"#, Ok(Value::Ignore()));
 test!(math_if_stmt_true, r#"
 if 1+1==2 {
-  1
+  let x = 1;
 }"#, Ok(Value::Number(1)));
 test!(math_if_stmt_false, r#"
 if 1+1==3 {
-  1
+  let x = 1;
 }"#, Ok(Value::Ignore()));
 test!(if_stmt_bool_comparison_false, r#"
 if true==false {
-  1
+  let x = 1;
 }"#, Ok(Value::Ignore()));
 test!(if_stmt_bool_comparison_true, r#"
 if true==true {
-  1
+  let x = 1;
 }"#, Ok(Value::Number(1)));
 test!(if_statement_complicated_math_true, r#"fn main() {
   if 1+(4/2)==3 {
-    2
+    let x = 2;
   }
 }
 fn foo(){
@@ -106,7 +106,7 @@ fn foo(){
 }"#, Ok(Value::Number(2)));
 test!(if_statement_complicated_math_with_functions_true, r#"fn main() {
   if (foo()+2) == 3 {
-    2
+    let x = 2;
   }
 }
 fn foo(){
@@ -120,15 +120,18 @@ test!(define_full_program_with_if_stmts, r#"fn foo() {
 
 fn main() {
   if foo() {
-    let x = 4+1;
-    return y;
+    return 4+1;
   }  
 }"#, Ok(Value::Number(5)));
 test!(multiple_conditions_if_stmts, r#"
-if ((true) && (false && (true|false))) || false && (1+1)==2 {
-  2
+if !(true && (!!false && !!!(true|!false))) || false && !(1+1)==2 {
+  let x = 2;
+} else if 1+1==2 {
+  let x = 3;
+} else if (3+3)==6 {
+  let x = 4;
 }
-"#, Ok(Value::Number(2)));
+"#, Err("Unhandled Node"));
 /*test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);

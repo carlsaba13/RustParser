@@ -25,7 +25,6 @@ impl Runtime {
   }
 
   pub fn run(&mut self, node: &Node) -> Result<Value, &'static str> {
-    println!("Node = {:?}", node);
     match node {
       Node::Program{children} => {
         for n in children {
@@ -158,12 +157,9 @@ impl Runtime {
         Ok(value)
       }
       Node::Expression{children} => {
-        println!("Runtime expression");
-        println!("{:?}", children[0]);
         match &children[0] {
           Node::If{condition, children} => {
             let r = self.run(&condition[0])?;
-            println!("r = {:?}", r);
             match r {
               Value::Bool(val) => {
                 if val {
@@ -205,7 +201,6 @@ impl Runtime {
           return Err("Invalid amount of conditions")
         }
         let r = self.run(&condition[0])?;
-        println!("r = {:?}", r);
         match r {
           Value::Bool(val) => {
             if val {
@@ -223,22 +218,14 @@ impl Runtime {
         }
       }
       Node::TestEquality{children} => {
-        /*let s1 = self.run(&children[0])?;
-        let s2 = self.run(&children[1])?;
-        println!("Side 1 = {:?}", s1);
-        println!("Side 2 = {:?}", s2);*/
         match (self.run(&children[0]), self.run(&children[1])) {
           (Ok(Value::Number(lhs)), Ok(Value::Number(rhs))) => {
-            println!("Two numbers");
             Ok(Value::Bool(lhs == rhs))
           }
           (Ok(Value::Bool(lhs)), Ok(Value::Bool(rhs))) => {
-            println!("Two bools");
             Ok(Value::Bool(lhs == rhs))
           }
           _ => {
-            println!("lhs = {:?}", self.run(&children[0]));
-            println!("rhs = {:?}", self.run(&children[1]));
             return Err("Incompatible types")
           }
         }
@@ -248,8 +235,6 @@ impl Runtime {
           (Node::Condition{conditions: lhs}, Node::Condition{conditions: rhs}) => {
             match (self.run(&lhs[0]), self.run(&rhs[0])) {
               (Ok(Value::Bool(left)), Ok(Value::Bool(right))) => {
-                  println!("s1 = {:?}", left);
-                  println!("s2 = {:?}", right);
                   match name.as_ref() {
                     "&" => Ok(Value::Bool(left & right)),
                     "&&" => Ok(Value::Bool(left && right)),

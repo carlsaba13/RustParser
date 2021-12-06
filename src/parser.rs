@@ -233,6 +233,7 @@ pub fn equality_math(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn condition(input: &str) -> IResult<&str, Node> {
+  let (input, not) = many0(tag("!"))(input)?;
   let (input, c1) = alt((parenthetical_condition, equality_math, boolean, function_call))(input)?;
   let (input, c2) = many0(condition_end)(input)?;
   Ok((input, Node::Condition{conditions: vec![c1]})) // my runtime function only considers the first condition.
@@ -247,21 +248,33 @@ pub fn condition_end(input: &str) -> IResult<&str, Node> {
   Ok((input, Node::ConditionExpression{name: String::from(op), children: vec![c2]}))
 }
 
+pub fn body(input: &str) -> IResult<&str, Vec<Node>> {
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag("{")(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, e) = many1(statement)(input)?; // change this to be many statement/expression
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, _) = tag("}")(input)?;
+  Ok((input, e))
+}
+
+pub fn elif(input: &str) -> IResult<&str, Node> {
+  let (input, _) = tag("else if")(input)?;
+  let (input, if_stmt) = body(input)?;
+  Ok((input, Node::If{condition: vec![], children: if_stmt}))
+}
+
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if ")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, result) = condition(input)?;
-  let (input, _) = many0(tag(" "))(input)?;
-  let (input, _) = tag("{")(input)?;
+  let (input, body) = body(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
-  let (input, e) = many1(alt((statement, expression)))(input)?; // change this to be many statement/expression
-  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
-  let (input, _) = tag("}")(input)?;
-  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, elif) = many0(elif)(input)?;
   let mut c = vec![];
   //let mut s = vec![];
-  for i in e {
+  for i in body {
     match i {
       Node::Expression{children} => {
         c.append(&mut vec![children[0].clone()]);
