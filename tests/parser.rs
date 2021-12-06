@@ -96,10 +96,6 @@ test!(if_stmt_bool_comparison_true, r#"
 if true==true {
   1
 }"#, Ok(Value::Number(1)));
-test!(if_stmt_multiple_conditions_true, r#"
-if 1+1==2 & 2+2==3 ||  {
-  1
-}"#, Ok(Value::Ignore()));
 test!(if_statement_complicated_math_true, r#"fn main() {
   if 1+(4/2)==3 {
     2
@@ -127,6 +123,11 @@ fn main() {
     return 6;
   }  
 }"#, Ok(Value::Number(6)));
+test!(multiple_conditions_if_stmts, r#"
+if 1+1==2 {
+  2
+}
+"#, Ok(Value::Number(2)));
 /*test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
