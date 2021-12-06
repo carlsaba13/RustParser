@@ -116,6 +116,7 @@ impl Runtime {
         result
       },
       Node::FunctionDefine{children} => {
+        
         let (head, tail) = children.split_at(1);
         match &head[0] {
           Node::Identifier{value} => {
@@ -251,7 +252,9 @@ impl Runtime {
                   println!("s2 = {:?}", right);
                   match name.as_ref() {
                     "&" => Ok(Value::Bool(left & right)),
+                    "&&" => Ok(Value::Bool(left && right)),
                     "|" => Ok(Value::Bool(left | right)),
+                    "||" => Ok(Value::Bool(left || right)),
                     _ => Err("Undefined operator")
                   }
               }

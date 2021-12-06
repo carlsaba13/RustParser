@@ -120,11 +120,12 @@ test!(define_full_program_with_if_stmts, r#"fn foo() {
 
 fn main() {
   if foo() {
-    return 6;
+    let x = 4+1;
+    return y;
   }  
-}"#, Ok(Value::Number(6)));
+}"#, Ok(Value::Number(5)));
 test!(multiple_conditions_if_stmts, r#"
-if 1+1==2 {
+if true || false {
   2
 }
 "#, Ok(Value::Number(2)));
