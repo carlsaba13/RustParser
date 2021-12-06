@@ -96,7 +96,6 @@ pub fn integer1(input: &str) -> IResult<&str, Node> {
     result += i;
   }
   let number = result.parse::<i32>().unwrap();
-  println!("{:?}", number);
   Ok((input, Node::Number{value: number}))
 }
 
@@ -140,6 +139,17 @@ pub fn parenthetical_expression(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag(" "))(input)?;
   Ok((input, args))
 }
+pub fn parenthetical_condition(input: &str) -> IResult<&str, Node> {
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag("(")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, args) = condition(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  let (input, _) = tag(")")(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
+  Ok((input, args))
+}
+
 pub fn l4(input: &str) -> IResult<&str, Node> {
   alt((function_call, number, identifier, parenthetical_expression))(input)
 }
@@ -223,15 +233,10 @@ pub fn equality_math(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn condition(input: &str) -> IResult<&str, Node> {
-  let (input, c1) = alt((equality_math, boolean, function_call))(input)?;
-  println!("IMPORTANT C = {:?}", c1);
+  let (input, c1) = alt((parenthetical_condition, equality_math, boolean, function_call))(input)?;
   let (input, c2) = many0(condition_end)(input)?;
-  if c2.len() != 0 {
-    println!("Multiple conditions");
-  } else {
-    println!("Single condition");
-  }
-  Ok((input, Node::Condition{conditions: vec![c1]}))
+  Ok((input, Node::Condition{conditions: vec![c1]})) // my runtime function only considers the first condition.
+  // I tried more but got really stuck. It's complicated!
 }
 
 pub fn condition_end(input: &str) -> IResult<&str, Node> {
@@ -243,11 +248,9 @@ pub fn condition_end(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
-  println!("Number 1 = {:?}", input);
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if ")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
-  println!("Number 2 = {:?}", input);
   let (input, result) = condition(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
@@ -341,7 +344,6 @@ pub fn function_definition(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag("\n"),tag(" "))))(input)?;
   let mut children = vec![function_name];
-  println!("args, {:?}", args);
   children.append(&mut args);
   children.append(&mut statements);
   Ok((input, Node::FunctionDefine{ children: children }))   
