@@ -237,6 +237,7 @@ pub fn condition(input: &str) -> IResult<&str, Node> {
   let (input, not) = many0(tag("!"))(input)?;
   let (input, c1) = alt((parenthetical_condition, equality_math, boolean, function_call))(input)?;
   let (input, c2) = many0(condition_end)(input)?;
+  println!("After condition end = {:?}", input);
   Ok((input, Node::Condition{conditions: vec![c1]})) // my runtime function only considers the first condition.
   // I tried more but got really stuck. It's complicated!
 }
@@ -251,7 +252,7 @@ pub fn condition_end(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn body(input: &str) -> IResult<&str, Vec<Node>> {
-  let (input, _) = opt(tag(" "))(input)?;
+  let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, e) = many1(alt((statement, expression)))(input)?; // change this to be many statement/expression
@@ -260,16 +261,24 @@ pub fn body(input: &str) -> IResult<&str, Vec<Node>> {
   Ok((input, e))
 }
 
+pub fn condition_body(input: &str) -> IResult<&str, Node> {
+  let (input, c) = condition(input)?;
+  let (input, if_stmt) = body(input)?;
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  Ok((input, Node::If{condition: vec![], children: vec![]}))
+}
+
 pub fn elif(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("else if ")(input)?;
-  let (input, if_stmt) = body(input)?;
-  Ok((input, Node::If{condition: vec![], children: if_stmt}))
+  let (input, c) = condition_body(input)?;
+  Ok((input, Node::If{condition: vec![], children: vec![]}))
 }
 
 pub fn else_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("else ")(input)?;
   let (input, if_stmt) = body(input)?;
-  Ok((input, Node::If{condition: vec![], children: if_stmt}))
+  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  Ok((input, Node::If{condition: vec![], children: vec![]}))
 }
 
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
@@ -279,7 +288,7 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, body) = body(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, elif) = many0(elif)(input)?;
-  let (input, else) = opt(else_stmt)(input)?;
+  let (input, else_stmt) = opt(else_stmt)(input)?;
   let mut c = vec![];
   //let mut s = vec![];
   for i in body {

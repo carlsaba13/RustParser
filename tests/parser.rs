@@ -125,18 +125,19 @@ fn main() {
 }"#, Ok(Value::Number(5)));
 test!(multiple_conditions_if_stmts, r#"
 if  !(true) && false  {
-  let x = 2;
   if (true) {
-    let y = 7;
-  } else if false {
-    let y = 8;
+    let x = 1;
+  } else if false || true && (1+1)*2==2 {
+    let y = 2;
+  } else {
+    let y = 4;
   }
 } else if 1+1==2 {
   let x = 3;
-} else if (3+3)==6 {
-  let x = 4;
+} else {
+  let y = 1;
 }
-"#, Ok(Value::Number(4)));
+"#, Err("Unhandled Node"));
 /*test!(define_full_program_with_comments, r#"fn foo(a,b,c) {
   let x = a + 1;
   let y = bar(c - b);
