@@ -125,7 +125,7 @@ fn main() {
   }  
 }"#, Ok(Value::Number(5)));
 test!(multiple_conditions_if_stmts, r#"
-if true || false {
+if true && false && true || false && 1+1==2 {
   2
 }
 "#, Ok(Value::Number(2)));

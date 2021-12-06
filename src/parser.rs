@@ -223,17 +223,23 @@ pub fn equality_math(input: &str) -> IResult<&str, Node> {
 }
 
 pub fn condition(input: &str) -> IResult<&str, Node> {
-  let (input, c) = alt((equality_math, boolean, function_call))(input)?;
-  Ok((input, Node::Condition{conditions: vec![c]}))
+  let (input, c1) = alt((equality_math, boolean, function_call))(input)?;
+  println!("IMPORTANT C = {:?}", c1);
+  let (input, c2) = many0(condition_end)(input)?;
+  if c2.len() != 0 {
+    println!("Multiple conditions");
+  } else {
+    println!("Single condition");
+  }
+  Ok((input, Node::Condition{conditions: vec![c1]}))
 }
 
-pub fn condition_expression(input: &str) -> IResult<&str, Node> {
-  let (input, c1) = condition(input)?;
+pub fn condition_end(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(tag(" "))(input)?;
   let (input, op) = alt((tag("&&"),tag("&"),tag("||"),tag("|")))(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, c2) = condition(input)?;
-  Ok((input, Node::ConditionExpression{name: String::from(op), children: vec![c1,c2]}))
+  Ok((input, Node::ConditionExpression{name: String::from(op), children: vec![c2]}))
 }
 
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
@@ -242,17 +248,14 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = tag("if ")(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   println!("Number 2 = {:?}", input);
-  let (input, result) = alt((condition_expression, condition))(input)?;
-  println!("RESULT = {:?}", result);
+  let (input, result) = condition(input)?;
   let (input, _) = many0(tag(" "))(input)?;
   let (input, _) = tag("{")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, e) = many1(alt((statement, expression)))(input)?; // change this to be many statement/expression
-  println!("Whats up here = {:?}", input);
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, _) = tag("}")(input)?;
   let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
-  println!("Done with parsing = {:?}", input);
   let mut c = vec![];
   //let mut s = vec![];
   for i in e {
