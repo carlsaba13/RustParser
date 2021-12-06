@@ -9,7 +9,7 @@ fn main() -> Result<(), nom::Err<(&'static str, nom::error::ErrorKind)>> {
   println!("AST {:?}", ast);
   let result = run(&ast);
   println!("RESULT {:?}", result);*/
-  if !1+2==2 || !!false  {
+  if  1+2==3  ||    !!false   {
     let x = 5;
     println!("Here");
   } else {
