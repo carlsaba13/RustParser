@@ -76,7 +76,7 @@ test!(multiple_conditions_if_stmts, r#"
 if  !(true) && false  {
   if (true) {
     let x = 1;
-  } else if false || true && (1+1)*2==2 {
+  } else if (false || true) && (1+1)*2==2 {
     let y = 2;
   } else {
     let y = 4;
