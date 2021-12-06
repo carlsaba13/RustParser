@@ -158,21 +158,6 @@ impl Runtime {
       }
       Node::Expression{children} => {
         match &children[0] {
-          Node::If{condition, children} => {
-            let r = self.run(&condition[0])?;
-            match r {
-              Value::Bool(val) => {
-                if val {
-                  self.run(&children[0])
-                } else {
-                  Ok(Value::Ignore())
-                }
-              }
-              _ => {
-                Err("Why isn't this a bool")
-              }
-            }
-          }
           Node::MathExpression{..} |
           Node::Number{..} |
           Node::FunctionCall{..} |
@@ -192,66 +177,6 @@ impl Runtime {
       }
       Node::Bool{value} => {
         Ok(Value::Bool(*value))
-      }
-      Node::If{condition, children} => {
-        if condition.len() % 2 != 1 { // should be an odd amount of conditions
-          // Ex 'true | false' = 3 conditions
-          // Ex 'true' = 1 condition
-          // Ex 1+1==2 && true = 3 conditions
-          return Err("Invalid amount of conditions")
-        }
-        let r = self.run(&condition[0])?;
-        match r {
-          Value::Bool(val) => {
-            if val {
-              self.run(&children[0])
-            } else {
-              Ok(Value::Ignore())
-            }
-          }
-          Value::Ignore() => {
-            Ok(Value::Ignore())
-          }
-          _ => {
-            Err("Why isn't this a bool")
-          }
-        }
-      }
-      Node::TestEquality{children} => {
-        match (self.run(&children[0]), self.run(&children[1])) {
-          (Ok(Value::Number(lhs)), Ok(Value::Number(rhs))) => {
-            Ok(Value::Bool(lhs == rhs))
-          }
-          (Ok(Value::Bool(lhs)), Ok(Value::Bool(rhs))) => {
-            Ok(Value::Bool(lhs == rhs))
-          }
-          _ => {
-            return Err("Incompatible types")
-          }
-        }
-      }
-      Node::ConditionExpression{name, children} => {
-        match (&children[0], &children[1]) {
-          (Node::Condition{conditions: lhs}, Node::Condition{conditions: rhs}) => {
-            match (self.run(&lhs[0]), self.run(&rhs[0])) {
-              (Ok(Value::Bool(left)), Ok(Value::Bool(right))) => {
-                  match name.as_ref() {
-                    "&" => Ok(Value::Bool(left & right)),
-                    "&&" => Ok(Value::Bool(left && right)),
-                    "|" => Ok(Value::Bool(left | right)),
-                    "||" => Ok(Value::Bool(left || right)),
-                    _ => Err("Undefined operator")
-                  }
-              }
-              _ => {
-                Err("This should be two bools")
-              }
-            }
-          }
-          _ => Err("again an error")
-            
-        }
-          
       }
       _ => {
         Err("Unhandled Node")

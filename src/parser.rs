@@ -284,14 +284,13 @@ pub fn else_stmt(input: &str) -> IResult<&str, Node> {
 pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if ")(input)?;
-  let (input, result) = condition(input)?;
-  let (input, body) = body(input)?;
-  let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
+  let (input, c) = condition_body(input)?;
+  //let (input, body) = body(input)?;
+  //let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, elif) = many0(elif)(input)?;
   let (input, else_stmt) = opt(else_stmt)(input)?;
-  let mut c = vec![];
   //let mut s = vec![];
-  for i in body {
+  /*for i in body {
     match i {
       Node::Expression{children} => {
         c.append(&mut vec![children[0].clone()]);
@@ -303,11 +302,11 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
         panic!("Why isn't this an expression or statement");
       }
     }
-  }
+  }*/
   
-  match result {
+  /*match result {
     Node::Condition{conditions} => {
-        Ok((input, Node::If{condition: conditions, children: c}))
+        
     }
     Node::ConditionExpression{name, children} => {
       // create vector with all children later
@@ -316,8 +315,8 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
     _ => {
       panic!("Should be some conditions");
     }
-  }
-  
+  }*/
+  Ok((input, Node::If{condition: vec![], children: vec![]}))
     
 }
 
