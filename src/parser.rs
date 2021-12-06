@@ -237,9 +237,7 @@ pub fn condition(input: &str) -> IResult<&str, Node> {
   let (input, not) = many0(tag("!"))(input)?;
   let (input, c1) = alt((parenthetical_condition, equality_math, boolean, function_call))(input)?;
   let (input, c2) = many0(condition_end)(input)?;
-  println!("After condition end = {:?}", input);
-  Ok((input, Node::Condition{conditions: vec![c1]})) // my runtime function only considers the first condition.
-  // I tried more but got really stuck. It's complicated!
+  Ok((input, Node::Condition{conditions: vec![c1]}))
 }
 
 pub fn condition_end(input: &str) -> IResult<&str, Node> {
@@ -285,39 +283,9 @@ pub fn if_stmt(input: &str) -> IResult<&str, Node> {
   let (input, _) = many0(alt((tag(" "),tag("\t"), tag("\n"))))(input)?;
   let (input, _) = tag("if ")(input)?;
   let (input, c) = condition_body(input)?;
-  //let (input, body) = body(input)?;
-  //let (input, _) = many0(alt((tag(" "),tag("\t"),tag("\n"))))(input)?;
   let (input, elif) = many0(elif)(input)?;
   let (input, else_stmt) = opt(else_stmt)(input)?;
-  //let mut s = vec![];
-  /*for i in body {
-    match i {
-      Node::Expression{children} => {
-        c.append(&mut vec![children[0].clone()]);
-      }
-      Node::Statement{children} => {
-        c.append(&mut vec![children[0].clone()]);
-      }
-      _ => {
-        panic!("Why isn't this an expression or statement");
-      }
-    }
-  }*/
-  
-  /*match result {
-    Node::Condition{conditions} => {
-        
-    }
-    Node::ConditionExpression{name, children} => {
-      // create vector with all children later
-        Ok((input, Node::If{condition: vec![Node::ConditionExpression{name:name, children: children}], children: c}))
-    }
-    _ => {
-      panic!("Should be some conditions");
-    }
-  }*/
   Ok((input, Node::If{condition: vec![], children: vec![]}))
-    
 }
 
 
